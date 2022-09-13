@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"bufio"
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -12,40 +12,57 @@ import (
 
 const (
 	fileName       = "matrix"
+	fileNameSize   = "matrixWithSize"
 	resultFileName = "resultMatrix"
 )
 
-// func fileReaderOS() string {
-// 	file, err := os.Open(fileName)
+func fileReaderOS() (matrix [][]int) {
+	file, err := os.Open(fileNameSize)
 
-// 	check(err, "ReaderOS fail")
-// 	defer func() { check(file.Close(), "File closing error") }()
+	check(err, "ReaderOS fail")
+	defer func() { check(file.Close(), "File closing error") }()
 
-// 	//buf := make([]byte, 32) // define your buffer size here.
-// 	// for {
-// 	// 	n, err := file.Read(buf)
+	buf := make([]byte, 1)
 
-// 	// 	if n > 0 {
-// 	// 		fmt.Print(buf[:n]) // your read buffer.
-// 	// 	}
+	file.Read(buf)
 
-// 	// 	if err == io.EOF {
-// 	// 		break
-// 	// 	}
-// 	// 	if err != nil {
-// 	// 		check(err, "Reading error")
-// 	// 		break
-// 	// 	}
-// 	// }
-// 	//scanner := bufio.NewScanner(file)
+	matrixSize, err := strconv.Atoi(string(buf[0]))
+	check(err, "size error")
 
-// 	// for scanner.Scan() {
-// 	// 	line := scanner.Text()
+	matrix = make([][]int, matrixSize)
+	for ind, _ := range matrix {
+		matrix[ind] = make([]int, matrixSize)
+	}
 
-// 	// }
-// 	// return line
-// 	//return scanner.Text()
-// }
+	file.Read(buf)
+	for i := 0; i < matrixSize; i++ {
+		for j := 0; j < matrixSize; j++ {
+			file.Read(buf)
+			matrix[i][j], err = strconv.Atoi(string(buf[0]))
+			check(err, "Error reading matrix")
+			file.Read(buf)
+		}
+	}
+
+	return
+}
+
+func fileReaderBufio() string {
+	file, err := os.Open(fileName)
+
+	check(err, "ReaderOS fail")
+	defer func() { check(file.Close(), "File closing error") }()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	var buf string
+
+	for scanner.Scan() {
+		buf += scanner.Text() + " "
+	}
+
+	return buf
+}
 
 func fileReaderIO() string {
 	data, err := ioutil.ReadFile(fileName)
@@ -73,8 +90,7 @@ func parseMatrix(buf string) [][]int {
 }
 
 func multiplyMatrix(matrix *[][]int) {
-	//factor := initFactor()
-	factor := 5
+	factor := initFactor()
 
 	for _, line := range *matrix {
 		for ind, _ := range line {
@@ -105,9 +121,8 @@ func check(err error, text string) {
 }
 
 func main() {
-	matrix := parseMatrix(fileReaderIO())
+	matrix := fileReaderOS()
 	fmt.Println(matrix)
 	multiplyMatrix(&matrix)
 	writeMatrixToFileOS(&matrix)
-
 }
